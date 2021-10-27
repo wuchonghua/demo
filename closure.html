@@ -1,0 +1,11 @@
+<script>
+function func() {
+ var a = 1;
+ console.log(a); // 在调用func()时，此行会执行
+ return function(){
+   console.log(a + a)  // 在调用func()()时，此行执行
+ }
+}
+var x = func();
+//x();
+</script>
