@@ -43,6 +43,10 @@ object DataframeRDDPartitionNum {
     val dataframe = sparkSession.createDataFrame(l, struct)//.repartition(30)
     val value = dataframe.rdd.map(r => r.getAs[String](0))
     println("---------------------" + value.getNumPartitions) // 从Seq创建RDD
+    dataframe.createOrReplaceTempView("AAA")
+    sparkSession.sql("alter view AAA rename to bbb")
+    sparkSession.sql("select * from aaa").show(1)
+    sparkSession.catalog.listTables().foreach(t => println("-----------" + t.name))
     sparkSession.stop()
   }
 
