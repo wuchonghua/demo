@@ -13,10 +13,11 @@ object Top10CategoryTop10Session {
     val sparkConf = new SparkConf().setAppName("app").setMaster("local[*]")
     val sc = new SparkContext(sparkConf)
     sc.setCheckpointDir("datas/datas1")
-    val lineRDD: RDD[String] = sc.textFile("datas/user_visit_action.txt")
+    val lineRDD: RDD[String] = sc.textFile("datas/user_visit_action1.txt")
     // 一行数据转成一个action对象
     val userVisitActionRDD = lineRDD.map(
       line => {
+        println("执行RDD算子")
         val splitwords = line.split("_")
         val userVisitAction = new UserVisitAction(
           date = splitwords(0),
@@ -37,8 +38,8 @@ object Top10CategoryTop10Session {
       }
     )
 
-    //userVisitActionRDD.cache()
-    userVisitActionRDD.checkpoint()
+    userVisitActionRDD.cache()
+    //userVisitActionRDD.checkpoint()
 
 
     // 一个action对象转换成点击下单支付数量  一次可以下单支付多个品类 所以flatMap
@@ -81,7 +82,7 @@ object Top10CategoryTop10Session {
         (categoryId, (sessionId, count))
       }
     }.groupByKey()
-
+    userVisitActionRDD.unpersist()
     println(category2SessionCountRDD.toDebugString)
 
     // 获取各个品类的session统计数量的前10
@@ -92,6 +93,7 @@ object Top10CategoryTop10Session {
     }
 
     resultRDD.collect().foreach(println)
+
     sc.stop()
   }
 

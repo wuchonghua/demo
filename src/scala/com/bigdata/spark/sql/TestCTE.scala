@@ -11,18 +11,32 @@ object TestCTE {
   def main(args: Array[String]): Unit = {
     val sparkSession  = SparkSession.builder().master("local[*]").appName("aa").config("spark.default.parallelism", "23").config("spark.sql.shuffle.partitions", "27").getOrCreate()
 
-    val rdd = sparkSession.sparkContext.makeRDD(List(Row(1, 2), Row(2, 3), Row(3, 4)))
+
+    val rdd = sparkSession.sparkContext.makeRDD(List(Row(1, 2), Row(2, 3)))
+    val rdd2 = sparkSession.sparkContext.makeRDD(List(Row(1, 2), Row(2, 3), Row(3, null), Row(3, null)))
     val va = sparkSession.createDataFrame(rdd, StructType.apply(List(StructField("asda", IntegerType), StructField("b", IntegerType))))
+    val va2 = sparkSession.createDataFrame(rdd2, StructType.apply(List(StructField("asda", IntegerType), StructField("b", IntegerType))))
+    va2.checkpoint()
     va.createOrReplaceTempView("V_A")  // 创建V_A
+    va2.createOrReplaceTempView("V_A2")  // 创建V_A
+
+//    val sql =
+//      """
+//        |with tmp1 as (select * from v_a where asda = 1),
+//        |tmp2 as (
+//        |select asda, b from tmp1 union all select asda, b from tmp2 t1 join V_A t2 on t1.b = t2.asda)
+//        |select * from tmp2
+//        |""".stripMargin
+//    sparkSession.sql(sql).show(3)
+
     val sql =
       """
-        |with tmp1 as (select * from v_a where asda = 1),
-        |tmp2 as (
-        |select asda, b from tmp1 union all select asda, b from tmp2 t1 join V_A t2 on t1.b = t2.asda)
-        |select * from tmp2
+        |select asda, b from V_A union select asda, b from V_A2
         |""".stripMargin
-    sparkSession.sql(sql).show(3)
+    sparkSession.sql(sql).show(10)
 
+    val value = sparkSession.sparkContext.textFile("E:\\new 3.txt")
+    println(value.collect().mkString("\", \""))
 
 
 
