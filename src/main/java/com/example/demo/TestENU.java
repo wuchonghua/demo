@@ -69,8 +69,11 @@ public class TestENU {
 //        double[] arr1 = wgs84ToEcef(36.7399177551, 116.9395751953, 0);//此处经纬度是需要比对的偏移经纬度
 //        double[] xyz=ecefToEnu(arr1[0],arr1[1], arr1[2],37, 117,  10.3);//此处经纬度是站点经纬度
 
-        double[] arr1 = wgs84ToEcef(37, 117,  10.3);//此处经纬度是需要比对的偏移经纬度
-        double[] xyz=ecefToEnu(arr1[0],arr1[1], arr1[2],36.7399177551, 116.9395751953, 0);//此处经纬度是站点经纬度
+        // 37, 117,  10.3需要计算偏移量的经纬度    36.7399177551, 116.9395751953, 0站心经纬度
+//        double[] arr1 = wgs84ToEcef(37, 117,  10.3);//此处经纬度是需要比对的偏移经纬度
+//        double[] xyz=ecefToEnu(arr1[0],arr1[1], arr1[2],36.7399177551, 116.9395751953, 0);//此处经纬度是站点经纬度
+        double[] arr1 = wgs84ToEcef(-122.160145533719, 47.629782928083, 49.190277286805);//此处经纬度是需要比对的偏移经纬度
+        double[] xyz=ecefToEnu(arr1[0],arr1[1], arr1[2],47.629727103522, -122.159602694103, 47.616356875747);//此处经纬度是站点经纬度
         System.out.println("xyz[0]"+xyz[0]);
         System.out.println("xyz[1]"+xyz[1]);
         System.out.println("xyz[2]"+xyz[2]);
