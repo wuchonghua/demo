@@ -31,13 +31,13 @@ object TestCacheTable {
     val vc = sparkSession.sql("select * from V_A where c1 = 2")
 
 
-    //vb.cache()
+    vb.cache()
     vb.createOrReplaceTempView("V_B")  // 使用V_A创建V_B
-    sparkSession.sql("cache table v_b")
+//    sparkSession.sql("cache table v_b")
 
-    //vc.cache()
+    vc.cache()
     vc.createOrReplaceTempView("V_C")  // 使用V_A创建V_C
-    sparkSession.sql("cache table v_c")
+//    sparkSession.sql("cache table v_c")
 
 
     //sparkSession.catalog.dropTempView("V_A")  // 删除V_A  使缓存失效

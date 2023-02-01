@@ -26,6 +26,7 @@ public class TestC {
         double []  result  = new double[2];
         result[0]=offsetX+ X*K*Math.cos(angle) - Y*K*Math.sin(angle);
         result[1]=offsetY+ X*K*Math.sin(angle) + Y*K*Math.cos(angle);
+//        int total = ((ownMoney[0] << 8) | (ownMoney[1] & 0xFF )   &0xFF );
         return result;
     }
     /**
