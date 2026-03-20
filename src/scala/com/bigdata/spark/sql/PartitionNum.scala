@@ -16,8 +16,9 @@ object PartitionNum {
     df.createOrReplaceTempView("V_A")
     val df2 = sparkSession.sql("select * from V_A")
     val df3 = df.groupBy("a").count()
-    println(df.rdd.groupBy(_.get(1)).getNumPartitions + "----------------------------------@@@@@@@@@@@@@@@@@@@@@@@") //23 RDD shuffle
+    println(df.rdd.getNumPartitions + "----------------------------------@@@@@@@@@@@@@@@@@@@@@@@") //23 spark.default.parallelism
     println(df2.rdd.getNumPartitions + "----------------------------------@@@@@@@@@@@@@@@@@@@@@@@") // 23  从父RDD继承
+    println(df.rdd.groupBy(_.get(1)).getNumPartitions + "----------------------------------@@@@@@@@@@@@@@@@@@@@@@@") //23 RDD shuffle
     println(df3.rdd.getNumPartitions + "----------------------------------@@@@@@@@@@@@@@@@@@@@@@@") // 27  sql shuffle
 
     sparkSession.stop()

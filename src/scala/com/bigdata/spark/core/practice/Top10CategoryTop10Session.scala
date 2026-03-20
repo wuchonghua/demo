@@ -1,7 +1,10 @@
 package com.bigdata.spark.core.practice
 
 import org.apache.spark.rdd.RDD
+import org.apache.spark.rdd.RDD.rddToPairRDDFunctions
 import org.apache.spark.{SparkConf, SparkContext}
+
+import scala.collection.mutable
 
 /**
  * @author wuchonghua
@@ -13,11 +16,11 @@ object Top10CategoryTop10Session {
     val sparkConf = new SparkConf().setAppName("app").setMaster("local[*]")
     val sc = new SparkContext(sparkConf)
     sc.setCheckpointDir("datas/datas1")
-    val lineRDD: RDD[String] = sc.textFile("datas/user_visit_action1.txt")
+    val lineRDD: RDD[String] = sc.textFile("datas/user_visit_action.txt")
     // 一行数据转成一个action对象
     val userVisitActionRDD = lineRDD.map(
       line => {
-        println("执行RDD算子")
+//        println("执行RDD算子")
         val splitwords = line.split("_")
         val userVisitAction = new UserVisitAction(
           date = splitwords(0),
@@ -77,21 +80,61 @@ object Top10CategoryTop10Session {
       userVisitAction => ((userVisitAction.click_category_id, userVisitAction.session_id), 1)
     ).reduceByKey(_ + _)
     // 转换成各品类中session的统计数量，分组
-    val category2SessionCountRDD: RDD[(Long, Iterable[(String, Int)])] = categorySession2CountRDD.map {
+    val category2SessionCountRDD: RDD[(Long, (String, Int))] = categorySession2CountRDD.map {
       case ((categoryId, sessionId), count) => {
         (categoryId, (sessionId, count))
       }
-    }.groupByKey()
-    userVisitActionRDD.unpersist()
-    println(category2SessionCountRDD.toDebugString)
-
-    // 获取各个品类的session统计数量的前10
-    val resultRDD: RDD[(Long, List[(String, Int)])] = category2SessionCountRDD.mapValues {
-      iter => {
-        iter.toList.sortBy(_._2)(Ordering.Int.reverse).take(10)
-      }
     }
 
+//    val category2SessionCountGroupRDD: RDD[(Long, Iterable[(String, Int)])] = category2SessionCountRDD.groupByKey()
+//    println(category2SessionCountGroupRDD.toDebugString)
+    // 获取各个品类的session统计数量的前10
+//    val resultRDD: RDD[(Long, List[(String, Int)])] = category2SessionCountGroupRDD.mapValues {
+//      iter => {
+//        iter.toList.sortBy(_._2)(Ordering.Int.reverse).take(10)
+//      }
+//    }
+
+    val resultRDD = category2SessionCountRDD.combineByKey[mutable.PriorityQueue[(String, Int)]](
+      // 分区第一个
+      (value: (String, Int)) => {
+        // 小根堆 存储最大的10个 堆顶放最小值
+        val comparator : Ordering[(String, Int)] = (v1: (String, Int), v2: (String, Int)) => {
+          v2._2 - v1._2
+        }
+        val pq = new mutable.PriorityQueue[(String, Int)]()(comparator)
+        pq.enqueue(value)
+        pq
+      },
+      // 分区内
+      (pq: mutable.PriorityQueue[(String, Int)], value: (String, Int)) =>  {
+        if (pq.size >= 10) {
+          if (pq.head._2 < value._2) {
+            pq.dequeue()
+            pq.enqueue(value)
+          }
+        } else {
+          pq.enqueue(value)
+        }
+        pq
+      },
+      // 分区间
+      (pq1: mutable.PriorityQueue[(String, Int)], pq2: mutable.PriorityQueue[(String, Int)]) => {
+        pq2.foreach(
+          value => {
+            if (pq1.size >= 10) {
+              if (pq1.head._2 < value._2) {
+                pq1.dequeue()
+                pq1.enqueue(value)
+              }
+            } else {
+              pq1.enqueue(value)
+            }
+          }
+        )
+        pq1
+      }
+    )
     resultRDD.collect().foreach(println)
 
     sc.stop()
